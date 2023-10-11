@@ -44,6 +44,9 @@ class LoadDatasetUI(UIBase):
                     self.cb_use_custom_threshold_booru = gr.Checkbox(value=cfg_general.use_custom_threshold_booru, label='Use Custom Threshold (Booru)', interactive=True)
                     self.sl_custom_threshold_booru = gr.Slider(minimum=0, maximum=1, value=cfg_general.custom_threshold_booru, step=0.01, interactive=True, label='Booru Score Threshold')
                 with gr.Row():
+                    self.cb_use_custom_threshold_e621 = gr.Checkbox(value=cfg_general.use_custom_threshold_e621, label='Use Custom Threshold (E621)', interactive=True)
+                    self.sl_custom_threshold_e621 = gr.Slider(minimum=0, maximum=1, value=cfg_general.custom_threshold_e621, step=0.01, interactive=True, label='E621 Score Threshold')
+                with gr.Row():
                     self.cb_use_custom_threshold_waifu = gr.Checkbox(value=cfg_general.use_custom_threshold_waifu, label='Use Custom Threshold (WDv1.4 Tagger)', interactive=True)
                     self.sl_custom_threshold_waifu = gr.Slider(minimum=0, maximum=1, value=cfg_general.custom_threshold_waifu, step=0.01, interactive=True, label='WDv1.4 Tagger Score Threshold')
     
@@ -58,6 +61,8 @@ class LoadDatasetUI(UIBase):
             use_interrogator_names, #: List[str], : to avoid error on gradio v3.23.0
             use_custom_threshold_booru: bool,
             custom_threshold_booru: float,
+            use_custom_threshold_e621: bool,
+            custom_threshold_e621: float,
             use_custom_threshold_waifu: bool,
             custom_threshold_waifu: float,
             use_kohya_metadata: bool,
@@ -75,9 +80,10 @@ class LoadDatasetUI(UIBase):
                 interrogate_method = InterrogateMethod.APPEND
 
             threshold_booru = custom_threshold_booru if use_custom_threshold_booru else shared.opts.interrogate_deepbooru_score_threshold
+            threshold_e621 = custom_threshold_e621 if use_custom_threshold_e621 else -1
             threshold_waifu = custom_threshold_waifu if use_custom_threshold_waifu else -1
 
-            dte_instance.load_dataset(dir, caption_file_ext, recursive, load_caption_from_filename, replace_new_line, interrogate_method, use_interrogator_names, threshold_booru, threshold_waifu, opts.dataset_editor_use_temp_files, kohya_json_path if use_kohya_metadata else None, opts.dataset_editor_max_res)
+            dte_instance.load_dataset(dir, caption_file_ext, recursive, load_caption_from_filename, replace_new_line, interrogate_method, use_interrogator_names, threshold_booru, threshold_e621, threshold_waifu, opts.dataset_editor_use_temp_files, kohya_json_path if use_kohya_metadata else None, opts.dataset_editor_max_res)
             imgs = dte_instance.get_filtered_imgs(filters=[])
             img_indices = dte_instance.get_filtered_imgindices(filters=[])
             return [
@@ -90,7 +96,23 @@ class LoadDatasetUI(UIBase):
         
         self.btn_load_datasets.click(
             fn=load_files_from_dir,
-            inputs=[self.tb_img_directory, self.tb_caption_file_ext, self.cb_load_recursive, self.cb_load_caption_from_filename, self.cb_replace_new_line_with_comma, self.rb_use_interrogator, self.dd_intterogator_names, self.cb_use_custom_threshold_booru, self.sl_custom_threshold_booru, self.cb_use_custom_threshold_waifu, self.sl_custom_threshold_waifu, toprow.cb_save_kohya_metadata, toprow.tb_metadata_output],
+            inputs=[
+                self.tb_img_directory,
+                self.tb_caption_file_ext,
+                self.cb_load_recursive,
+                self.cb_load_caption_from_filename,
+                self.cb_replace_new_line_with_comma,
+                self.rb_use_interrogator,
+                self.dd_intterogator_names,
+                self.cb_use_custom_threshold_booru,
+                self.sl_custom_threshold_booru,
+                self.cb_use_custom_threshold_e621,
+                self.sl_custom_threshold_e621,
+                self.cb_use_custom_threshold_waifu,
+                self.sl_custom_threshold_waifu,
+                toprow.cb_save_kohya_metadata,
+                toprow.tb_metadata_output,
+            ],
             outputs=
             [dataset_gallery.gl_dataset_images, filter_by_selection.gl_filter_images] +
             [dataset_gallery.cbg_hidden_dataset_filter, dataset_gallery.nb_hidden_dataset_filter_apply] +

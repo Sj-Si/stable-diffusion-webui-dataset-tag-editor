@@ -29,7 +29,9 @@ GeneralConfig = namedtuple('GeneralConfig', [
     'use_interrogator', 
     'use_interrogator_names',
     'use_custom_threshold_booru', 
-    'custom_threshold_booru', 
+    'custom_threshold_booru',
+    'use_custom_threshold_e621',
+    'custom_threshold_e621',
     'use_custom_threshold_waifu', 
     'custom_threshold_waifu',
     'save_kohya_metadata',
@@ -44,7 +46,7 @@ BatchEditConfig = namedtuple('BatchEditConfig', ['show_only_selected', 'prepend'
 EditSelectedConfig = namedtuple('EditSelectedConfig', ['auto_copy', 'sort_on_save', 'warn_change_not_saved', 'use_interrogator_name', 'sort_by', 'sort_order'])
 MoveDeleteConfig = namedtuple('MoveDeleteConfig', ['range', 'target', 'caption_ext', 'destination'])
 
-CFG_GENERAL_DEFAULT = GeneralConfig(True, '', '.txt', False, True, False, 'No', [], False, 0.7, False, 0.35, False, '', '', True, False, False)
+CFG_GENERAL_DEFAULT = GeneralConfig(True, '', '.txt', False, True, False, 'No', [], False, 0.7, False, 0.35, False, 0.35, False, '', '', True, False, False)
 CFG_FILTER_P_DEFAULT = FilterConfig(False, False, False, SortBy.ALPHA.value, SortOrder.ASC.value, 'AND')
 CFG_FILTER_N_DEFAULT = FilterConfig(False, False, False, SortBy.ALPHA.value, SortOrder.ASC.value, 'OR')
 CFG_BATCH_EDIT_DEFAULT = BatchEditConfig(True, False, False, 'Only Selected Tags', False, False, False, SortBy.ALPHA.value, SortOrder.ASC.value, SortBy.ALPHA.value, SortOrder.ASC.value, 75)
@@ -116,6 +118,7 @@ def read_general_config():
         ('use_blip_to_prefill', 'BLIP'),
         ('use_git_to_prefill', 'GIT-large-COCO'),
         ('use_booru_to_prefill', 'DeepDanbooru'),
+        ('use_e621_to_prefill', 'E621'),
         ('use_waifu_to_prefill', 'wd-v1-4-vit-tagger')
     ]
     use_interrogator_names = []
@@ -240,10 +243,26 @@ def on_ui_tabs():
         # General
 
         components_general = [
-            ui.toprow.cb_backup, ui.load_dataset.tb_img_directory, ui.load_dataset.tb_caption_file_ext, ui.load_dataset.cb_load_recursive,
-            ui.load_dataset.cb_load_caption_from_filename, ui.load_dataset.cb_replace_new_line_with_comma, ui.load_dataset.rb_use_interrogator, ui.load_dataset.dd_intterogator_names,
-            ui.load_dataset.cb_use_custom_threshold_booru, ui.load_dataset.sl_custom_threshold_booru, ui.load_dataset.cb_use_custom_threshold_waifu, ui.load_dataset.sl_custom_threshold_waifu,
-            ui.toprow.cb_save_kohya_metadata, ui.toprow.tb_metadata_output, ui.toprow.tb_metadata_input, ui.toprow.cb_metadata_overwrite, ui.toprow.cb_metadata_as_caption, ui.toprow.cb_metadata_use_fullpath
+            ui.toprow.cb_backup,
+            ui.load_dataset.tb_img_directory,
+            ui.load_dataset.tb_caption_file_ext,
+            ui.load_dataset.cb_load_recursive,
+            ui.load_dataset.cb_load_caption_from_filename,
+            ui.load_dataset.cb_replace_new_line_with_comma,
+            ui.load_dataset.rb_use_interrogator,
+            ui.load_dataset.dd_intterogator_names,
+            ui.load_dataset.cb_use_custom_threshold_booru,
+            ui.load_dataset.sl_custom_threshold_booru,
+            ui.load_dataset.cb_use_custom_threshold_e621,
+            ui.load_dataset.sl_custom_threshold_e621,
+            ui.load_dataset.cb_use_custom_threshold_waifu,
+            ui.load_dataset.sl_custom_threshold_waifu,
+            ui.toprow.cb_save_kohya_metadata,
+            ui.toprow.tb_metadata_output,
+            ui.toprow.tb_metadata_input,
+            ui.toprow.cb_metadata_overwrite,
+            ui.toprow.cb_metadata_as_caption,
+            ui.toprow.cb_metadata_use_fullpath
         ]
         components_filter = \
             [ui.filter_by_tags.tag_filter_ui.cb_prefix, ui.filter_by_tags.tag_filter_ui.cb_suffix, ui.filter_by_tags.tag_filter_ui.cb_regex, ui.filter_by_tags.tag_filter_ui.rb_sort_by, ui.filter_by_tags.tag_filter_ui.rb_sort_order, ui.filter_by_tags.tag_filter_ui.rb_logic] +\

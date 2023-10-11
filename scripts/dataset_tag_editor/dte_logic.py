@@ -15,14 +15,14 @@ from scripts.tokenizer import clip_tokenizer
 WD_TAGGER_NAMES = ["wd-v1-4-vit-tagger", "wd-v1-4-convnext-tagger", "wd-v1-4-vit-tagger-v2", "wd-v1-4-convnext-tagger-v2", "wd-v1-4-swinv2-tagger-v2"]
 WD_TAGGER_THRESHOLDS = [0.35, 0.35, 0.3537, 0.3685, 0.3771] # v1: idk if it's okay  v2: P=R thresholds on each repo https://huggingface.co/SmilingWolf
 
-INTERROGATORS = [captioning.BLIP(), tagger.DeepDanbooru()] + [tagger.WaifuDiffusion(name, WD_TAGGER_THRESHOLDS[i]) for i, name in enumerate(WD_TAGGER_NAMES)]
+INTERROGATORS = [captioning.BLIP(), tagger.DeepDanbooru(), tagger.E621()] + [tagger.WaifuDiffusion(name, WD_TAGGER_THRESHOLDS[i]) for i, name in enumerate(WD_TAGGER_NAMES)]
 INTERROGATOR_NAMES = [it.name() for it in INTERROGATORS]
 
 re_tags = re.compile(r'^([\s\S]+?)( \[\d+\])?$')
 re_newlines = re.compile(r'[\r\n]+')
 
 
-def interrogate_image(path:str, interrogator_name:str, threshold_booru, threshold_wd):
+def interrogate_image(path:str, interrogator_name:str, threshold_booru, threshold_e621, threshold_wd):
     try:
         img = Image.open(path).convert('RGB')
     except:
@@ -33,6 +33,9 @@ def interrogate_image(path:str, interrogator_name:str, threshold_booru, threshol
                 if isinstance(it, tagger.DeepDanbooru):
                     with it as tg:
                         res = tg.predict(img, threshold_booru)
+                elif isinstance(it, tagger.E621):
+                    with it as tg:
+                        res = tg.predict(img, threshold_e621)
                 elif isinstance(it, tagger.WaifuDiffusion):
                     with it as tg:
                         res = tg.predict(img, threshold_wd)
@@ -482,7 +485,22 @@ class DatasetTagEditor(Singleton):
                 print(e)
 
 
-    def load_dataset(self, img_dir:str, caption_ext:str, recursive:bool, load_caption_from_filename:bool, replace_new_line:bool, interrogate_method:InterrogateMethod, interrogator_names:List[str], threshold_booru:float, threshold_waifu:float, use_temp_dir:bool, kohya_json_path:Optional[str], max_res:float):
+    def load_dataset(
+        self,
+        img_dir:str,
+        caption_ext:str,
+        recursive:bool,
+        load_caption_from_filename:bool,
+        replace_new_line:bool,
+        interrogate_method:InterrogateMethod,
+        interrogator_names:List[str],
+        threshold_booru:float,
+        threshold_e621: float,
+        threshold_waifu:float,
+        use_temp_dir:bool,
+        kohya_json_path:Optional[str],
+        max_res:float,
+    ):
         self.clear()
 
         img_dir_obj = Path(img_dir)
@@ -561,6 +579,8 @@ class DatasetTagEditor(Singleton):
                         if isinstance(it, tagger.Tagger):
                             if isinstance(it, tagger.DeepDanbooru):
                                 taggers.append((it, threshold_booru))
+                            if isinstance(it, tagger.E621):
+                                taggers.append((it, threshold_e621))
                             if isinstance(it, tagger.WaifuDiffusion):
                                 taggers.append((it, threshold_waifu))
                         elif isinstance(it, captioning.Captioning):

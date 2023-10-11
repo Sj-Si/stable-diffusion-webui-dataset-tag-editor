@@ -5,10 +5,14 @@ import numpy as np
 from typing import Optional, Dict
 from modules import devices, shared
 from modules import deepbooru as db
+from modules import shared
+from modules.shared import models_path
+from pathlib import Path
+import os
 
 from .interrogator import Interrogator
 from .interrogators import WaifuDiffusionTagger
-
+from .interrogators import E621Tagger
 
 class Tagger(Interrogator):
     def start(self):
@@ -23,7 +27,7 @@ class Tagger(Interrogator):
 
 def get_replaced_tag(tag: str):
     use_spaces = shared.opts.deepbooru_use_spaces
-    use_escape = shared.opts.deepbooru_escape   
+    use_escape = shared.opts.deepbooru_escape
     if use_spaces:
         tag = tag.replace('_', ' ')
     if use_escape:
@@ -77,6 +81,42 @@ class WaifuDiffusion(Tagger):
         self.repo_name = repo_name
         self.tagger_inst = WaifuDiffusionTagger("SmilingWolf/" + repo_name)
         self.threshold = threshold
+
+    def start(self):
+        self.tagger_inst.load()
+        return self
+
+    def stop(self):
+        self.tagger_inst.unload()
+
+    # brought from https://huggingface.co/spaces/SmilingWolf/wd-v1-4-tags/blob/main/app.py and modified
+    # set threshold<0 to use default value for now...
+    def predict(self, image: Image.Image, threshold: Optional[float] = None):
+        # may not use ratings
+        # rating = dict(labels[:4])
+
+        labels = self.tagger_inst.apply(image)
+
+        if threshold is not None:
+            if threshold < 0:
+                threshold = self.threshold
+            probability_dict = dict([(get_replaced_tag(x[0]), x[1]) for x in labels[4:] if x[1] > threshold])
+        else:
+            probability_dict = dict([(get_replaced_tag(x[0]), x[1]) for x in labels[4:]])
+
+        return probability_dict
+
+    def name(self):
+        return self.repo_name
+
+DEFAULT_ONNX_PATH = Path(models_path, "TaggerOnnx")
+
+class E621(Tagger):
+    def __init__(self):
+        self.repo_name = "Z3D-E621-Convnext"
+        self.onnx_path = os.path.join(DEFAULT_ONNX_PATH, self.repo_name)
+        self.tagger_inst = E621Tagger(self.onnx_path)
+        self.threshold = 0.35
 
     def start(self):
         self.tagger_inst.load()
